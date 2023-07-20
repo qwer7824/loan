@@ -9,4 +9,6 @@ public interface CounselService {
     Response get(Long counselId); // 대출 상담 정보 조회
 
     Response update(Long counselId, Request request); // 대출 상담 수정
+
+    void delete(Long counselId); // 대출 상담 삭제
 }
