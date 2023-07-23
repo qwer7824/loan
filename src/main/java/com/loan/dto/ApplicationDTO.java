@@ -42,7 +42,7 @@ public class ApplicationDTO implements Serializable {
 
         private LocalDateTime appliedAt;
 
-        private LocalDateTime createAt;
+        private LocalDateTime createdAt;
 
         private LocalDateTime updatedAt;
 
