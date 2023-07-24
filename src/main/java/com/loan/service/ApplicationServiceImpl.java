@@ -2,21 +2,30 @@ package com.loan.service;
 
 
 import com.loan.domain.Application;
+import com.loan.domain.Terms;
 import com.loan.dto.ApplicationDTO.*;
 import com.loan.exception.BaseException;
 import com.loan.exception.ResultType;
+import com.loan.repository.AcceptTermsRepository;
 import com.loan.repository.ApplicationRepository;
+import com.loan.repository.TermsRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
+    private final TermsRepository termsRepository;
+    private final AcceptTermsRepository acceptTermsRepository;
 
     private final ModelMapper modelMapper;
 
@@ -64,6 +73,41 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         applicationRepository.save(application);
 
+    }
+
+    @Override
+    public Boolean acceptTerms(Long applicationId, AcceptTerms request) {
+        applicationRepository.findById(applicationId).orElseThrow(()->{ // 대출 신청이 조회가 되지않으면 에러발생
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        });
+
+        List<Terms> termsList = termsRepository.findAll(Sort.by(Sort.Direction.ASC, "termsId"));
+        if (termsList.isEmpty()){ // 약관이 없으면 에러 발생
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        }
+        List<Long> acceptTermsIds = request.getAcceptTermsIds(); // 불러온 약관의 수와 동의한 약관 수가 맞지않으면 에러
+        if (termsList.size() != acceptTermsIds.size()){
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        }
+
+        List<Long> termsIds = termsList.stream().map(Terms::getTermsId).collect(Collectors.toList());
+        Collections.sort(acceptTermsIds); // 약관 정렬
+
+        if(!termsIds.containsAll(acceptTermsIds)){ // 가지고 있는 termsId 와 DTO로 받은 값이 포함되지 않으면 에러 발생
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        }
+
+        for (Long termsId : acceptTermsIds){
+            com.loan.domain.AcceptTerms accepted = com.loan.domain.AcceptTerms.builder()
+                    .termsId(termsId)
+                    .applicationId(applicationId)
+                    .build();
+
+             acceptTermsRepository.save(accepted);
+
+        }
+
+        return true;
     }
 
 }
