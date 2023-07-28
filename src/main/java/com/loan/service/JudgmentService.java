@@ -5,4 +5,8 @@ import com.loan.dto.JudgmentDTO.*;
 public interface JudgmentService {
 
     Response create(Request request);
+
+    Response get(Long judgmentId);
+
+    Response getJudgmentOfApplication(Long applicationId); // 신청 정보 아이디를 통해서 심사정보를 가져옴
 }
