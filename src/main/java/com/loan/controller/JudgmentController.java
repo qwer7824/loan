@@ -33,6 +33,12 @@ public class JudgmentController extends AbstractController {
         judgmentService.delete(judgmentId);
         return ok();
     }
+
+    @PutMapping("/{judgmentId}")
+    public ResponseDTO<Response> update(@PathVariable Long judgmentId, @RequestBody Request request) {
+        return ok(judgmentService.update(judgmentId, request));
+    }
+
     @PatchMapping("/{judgmentId}/grant") // 심사 Id 를 최종적으로 승인을 해주면 승인된 금액이 반영
     public ResponseDTO<ApplicationDTO.GrantAmount> grant(@PathVariable Long judgmentId){
         return ok(judgmentService.grant(judgmentId));
