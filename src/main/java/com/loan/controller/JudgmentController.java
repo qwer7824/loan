@@ -26,5 +26,11 @@ public class JudgmentController extends AbstractController {
     public ResponseDTO<Response> getJudgmentOfApplication(@PathVariable Long applicationId){
         return ok(judgmentService.getJudgmentOfApplication(applicationId));
     }
+
+    @DeleteMapping("/{judgmentId}")
+    public ResponseDTO<Void> delete(@PathVariable Long judgmentId){
+        judgmentService.delete(judgmentId);
+        return ok();
+    }
 }
 
