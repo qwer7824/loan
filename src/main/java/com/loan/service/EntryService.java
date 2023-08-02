@@ -7,4 +7,5 @@ public interface EntryService {
     Response create(Long applicationId , Request request);
 
     Response get(Long applicationId);
+    UpdateResponse update(Long entryId , Request request);
 }

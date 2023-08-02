@@ -55,6 +55,31 @@ public class EntryServiceImpl implements EntryService{
         }
     }
 
+    @Override
+    public UpdateResponse update(Long entryId, Request request) {
+        Entry entry = entryRepository.findById(entryId).orElseThrow(()->{
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        });
+
+        BigDecimal beforeEntryAmount = entry.getEntryAmount();
+        entry.setEntryAmount(request.getEntryAmount());
+
+        entryRepository.save(entry);
+
+        Long applicationId = entry.getApplicationId();
+        balanceService.update(applicationId,
+                BalanceDTO.UpdateRequest.builder()
+                        .beforeEntryAmount(beforeEntryAmount)
+                        .afterEntryAmount(request.getEntryAmount())
+                        .build());
+
+        return UpdateResponse.builder()
+                .entryId(entryId)
+                .applicationId(entry.getApplicationId())
+                .beforeEntryAmount(beforeEntryAmount)
+                .afterEntryAmount(entry.getEntryAmount())
+                .build();
+    }
     private boolean isContractedApplication(Long applicationId){
        Optional<Application> existed = applicationRepository.findById(applicationId);
        if(existed.isEmpty()){

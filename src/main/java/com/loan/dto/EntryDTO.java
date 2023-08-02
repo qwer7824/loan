@@ -36,6 +36,8 @@ public class EntryDTO implements Serializable {
   @Setter
   public static class UpdateResponse {
 
+    private Long entryId;
+
     private Long applicationId;
 
     private BigDecimal beforeEntryAmount;
