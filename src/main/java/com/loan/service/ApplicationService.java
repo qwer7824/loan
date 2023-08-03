@@ -14,4 +14,6 @@ public interface ApplicationService{
 
     Boolean acceptTerms(Long applicationId, AcceptTerms request); // 약관 동의
 
+    Response contract(Long applicationId); // 대출 계약
+
 }
