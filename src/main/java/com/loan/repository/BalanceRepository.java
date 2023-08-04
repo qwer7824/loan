@@ -8,6 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface BalanceRepository extends JpaRepository<Balance, Long> {
-
-  Optional<Balance> findAllByApplicationId(Long applicationId);
+  Optional<Balance> findByApplicationId(Long applicationId);
 }
