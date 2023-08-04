@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/internal/applications")
@@ -41,5 +43,10 @@ public class InternalController extends AbstractController{ // 사후 처리에 
     @PostMapping("/{applicationId}/repayments")
     public ResponseDTO<RepaymentDTO.Response> create(@PathVariable Long applicationId, @RequestBody RepaymentDTO.Request request){
         return ok(repaymentService.create(applicationId,request));
+    }
+
+    @GetMapping("/{applicationId}/repayments")
+    public ResponseDTO<List<RepaymentDTO.ListResponse>> getPayments(@PathVariable Long applicationId){
+    return ok(repaymentService.get(applicationId));
     }
 }
