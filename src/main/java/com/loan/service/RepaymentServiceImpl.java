@@ -14,13 +14,14 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RepaymentServiceImpl implements RepaymentService{
+public class RepaymentServiceImpl implements RepaymentService {
 
     private final RepaymentRepository repaymentRepository;
 
@@ -35,11 +36,11 @@ public class RepaymentServiceImpl implements RepaymentService{
     @Override
     public RepaymentDTO.Response create(Long applicationId, RepaymentDTO.Request request) {
         // 검증 1. 계약을 완료한 상태 2.집행이 되어 있어야함
-        if (!isRepayableApplication(applicationId)){
+        if (!isRepayableApplication(applicationId)) {
             throw new BaseException(ResultType.SYSTEM_ERROR);
         }
 
-        Repayment repayment = modelMapper.map(request , Repayment.class);
+        Repayment repayment = modelMapper.map(request, Repayment.class);
         repayment.setApplicationId(applicationId);
 
         repaymentRepository.save(repayment);
@@ -51,7 +52,7 @@ public class RepaymentServiceImpl implements RepaymentService{
                         .type(BalanceDTO.RepaymentRequest.RepaymentType.REMOVE)
                         .build());
 
-        RepaymentDTO.Response response =modelMapper.map(repayment, RepaymentDTO.Response.class);
+        RepaymentDTO.Response response = modelMapper.map(repayment, RepaymentDTO.Response.class);
         response.setBalance(updatedBalance.getBalance());
 
         return response;
@@ -63,16 +64,51 @@ public class RepaymentServiceImpl implements RepaymentService{
         return repayments.stream().map(r -> modelMapper.map(r, RepaymentDTO.ListResponse.class)).collect(Collectors.toList());
     }
 
-    private boolean isRepayableApplication(Long applicationId){
-        Optional<Application> existedApplication = applicationRepository.findById(applicationId);
-        if (existedApplication.isEmpty()){
-            return false;
-        }
-        if (existedApplication.get().getContractedAt() == null){
-            return false;
-        }
+    @Override
+    public RepaymentDTO.UpdateResponse update(Long repaymentId, RepaymentDTO.Request request) {
+        Repayment repayment = repaymentRepository.findById(repaymentId).orElseThrow(() -> {
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        });
 
-        Optional<Entry> existedEntry = entryRepository.findByApplicationId(applicationId);
-        return existedEntry.isPresent();
+        Long applicationId = repayment.getApplicationId();
+        BigDecimal beforeRepaymentAmount = repayment.getRepaymentAmount();
+
+        // 500 - 100 = 400
+        // 400 + 100 = 500
+
+        balanceService.repaymentUpdate(applicationId, BalanceDTO.RepaymentRequest.builder()
+                .repaymentAmount(beforeRepaymentAmount)
+                .type(BalanceDTO.RepaymentRequest.RepaymentType.ADD)
+                .build());
+
+        repayment.setRepaymentAmount(request.getRepaymentAmount());
+        repaymentRepository.save(repayment);
+
+        BalanceDTO.Response updatedBalance = balanceService.repaymentUpdate(applicationId, BalanceDTO.RepaymentRequest.builder()
+                .repaymentAmount(repayment.getRepaymentAmount())
+                .type(BalanceDTO.RepaymentRequest.RepaymentType.REMOVE)
+                .build());
+
+        return RepaymentDTO.UpdateResponse.builder()
+                .applicationId(applicationId)
+                .beforeRepaymentAmount(beforeRepaymentAmount)
+                .afterRepaymentAmount(repayment.getRepaymentAmount())
+                .balance(updatedBalance.getBalance())
+                .createdAt(repayment.getCreatedAt())
+                .updatedAt(repayment.getUpdatedAt())
+                .build();
     }
-}
+
+        private boolean isRepayableApplication (Long applicationId){
+            Optional<Application> existedApplication = applicationRepository.findById(applicationId);
+            if (existedApplication.isEmpty()) {
+                return false;
+            }
+            if (existedApplication.get().getContractedAt() == null) {
+                return false;
+            }
+
+            Optional<Entry> existedEntry = entryRepository.findByApplicationId(applicationId);
+            return existedEntry.isPresent();
+        }
+    }

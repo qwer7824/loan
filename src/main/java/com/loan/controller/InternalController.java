@@ -6,7 +6,6 @@ import com.loan.dto.ResponseDTO;
 import com.loan.service.EntryService;
 import com.loan.service.RepaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,5 +47,10 @@ public class InternalController extends AbstractController{ // 사후 처리에 
     @GetMapping("/{applicationId}/repayments")
     public ResponseDTO<List<RepaymentDTO.ListResponse>> getPayments(@PathVariable Long applicationId){
     return ok(repaymentService.get(applicationId));
+    }
+
+    @PutMapping("/repayments/{repaymentId}")
+    public ResponseDTO<RepaymentDTO.UpdateResponse> update(@PathVariable Long repaymentId, @RequestBody RepaymentDTO.Request request){
+        return ok(repaymentService.update(repaymentId,request));
     }
 }
