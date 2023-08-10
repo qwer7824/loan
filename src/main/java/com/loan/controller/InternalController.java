@@ -53,4 +53,9 @@ public class InternalController extends AbstractController{ // 사후 처리에 
     public ResponseDTO<RepaymentDTO.UpdateResponse> update(@PathVariable Long repaymentId, @RequestBody RepaymentDTO.Request request){
         return ok(repaymentService.update(repaymentId,request));
     }
+    @DeleteMapping("/repayments/{repaymentId}")
+    public ResponseDTO<Void> deleteRepayment(@PathVariable Long repaymentId){
+        repaymentService.delete(repaymentId);
+        return ok();
+    }
 }
